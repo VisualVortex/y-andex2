@@ -1,8 +1,6 @@
+"use strict";
 /**
- * Created by d.emelin on 13.07.2015.
- */
-/**
- * ���������� API, �� ��������� ��
+ * Реализация API, не изменяйте ее
  * @param {string} url
  * @param {function} callback
  */
@@ -45,46 +43,102 @@ function getData(url, callback) {
 }
 
 /**
- * ���� ��������� ����
+ * Ваши изменения ниже
  */
+    /*
+     * ! Для начала я бы давал переменным более понятные названия.
+     *
+     * */
 var requests = ['/countries', '/cities', '/populations'];
 var responses = {};
+var rearranged_responses = {};
 
-for (i = 0; i < 3; i++) {
-    var request = requests[i];
+var get_population_by_input = function(input) {
+    var res = undefined;
+
+    if (input in rearranged_responses['populations']) res = get_city_population(input);
+    else if (input in rearranged_responses['cities']) res = get_country_population(input);
+    else if (input in rearranged_responses['countries']) res = get_area_population(input);
+    return res
+};
+
+var get_area_population = function(area) {
+    var countries = rearranged_responses['countries'][area];
+
+    var res = undefined;
+    if (countries) res = countries.reduce(function(sum, city) {
+        return sum + get_country_population(city);
+    }, 0);
+    return res;
+};
+
+var get_country_population = function(country) {
+    var cities = rearranged_responses['cities'][country];
+
+    var res = undefined;
+    if (cities) res = cities.reduce(function(sum, city) {
+        return sum + get_city_population(city);
+    }, 0);
+    return res;
+};
+
+var get_city_population = function(city) {
+    return rearranged_responses['populations'][city];
+};
+
+var rearrange_populations = function(dicts) {
+    var res = {};
+    dicts.forEach(function(dict) {
+        res[dict['name']] = dict['count'];
+    });
+    return res;
+};
+
+var rearrange_cities_or_countries = function(dicts) {
+    var keys = Object.keys(dicts[0]);
+
+    var first_key = 'name';
+    var second_key = keys[0] === first_key ? keys[1] : keys[0];
+
+    var res = {};
+    dicts.forEach(function(dict) {
+        var first_key_val = dict[first_key];
+        var second_key_val = dict[second_key];
+
+        if (second_key_val in res) res[second_key_val].push(first_key_val);
+        else res[second_key_val] = [first_key_val];
+    });
+    return res;
+};
+
+requests.forEach(function(request) {
     var callback = function (error, result) {
+
+        if (error) {
+            console.log(error);
+        }
+
         responses[request] = result;
-        var l = [];
-        for (K in responses)
-            l.push(K);
 
-        if (l.length == 3) {
-            var c = [], cc = [], p = 0;
-            for (i = 0; i < responses['/countries'].length; i++) {
-                if (responses['/countries'][i].continent === 'Africa') {
-                    c.push(responses['/countries'][i].name);
-                }
+        if (Object.keys(responses).length == requests.length) {
+
+            rearranged_responses['populations'] = rearrange_populations(responses['/populations']);
+            rearranged_responses['cities'] = rearrange_cities_or_countries(responses['/cities']);
+            rearranged_responses['countries'] = rearrange_cities_or_countries(responses['/countries']);
+
+            var answer = 'Total population in African cities: ' + get_area_population('Africa');
+            console.log(answer);
+
+            var input = prompt('Specify name of city, country or area', 'Africa');
+            answer = 'Total population in ' + input + ': ' + get_population_by_input(input);
+            if (get_population_by_input(input) !== undefined) {
+                console.log(answer);
             }
-
-            for (i = 0; i < responses['/cities'].length; i++) {
-                for (j = 0; j < c.length; j++) {
-                    if (responses['/cities'][i].country === c[j]) {
-                        cc.push(responses['/cities'][i].name);
-                    }
-                }
-            }
-
-            for (i = 0; i < responses['/populations'].length; i++) {
-                for (j = 0; j < cc.length; j++) {
-                    if (responses['/populations'][i].name === cc[j]) {
-                        p += responses['/populations'][i].count;
-                    }
-                }
-            }
-
-            console.log('Total population in African cities: ' + p);
+            else
+                console.log("Sorry. We have no Data about this place.");
         }
     };
 
     getData(request, callback);
-}
+
+});
