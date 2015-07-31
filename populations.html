@@ -3,8 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <title>Populations</title>
+    <style type="text/css">
+        .hide {
+            display: none;
+        }
+        body{
+            background: -moz-linear-gradient(top, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.01) 100%); /* FF3.6+ */
+            background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(0,0,0,0.05)), color-stop(100%,rgba(0,0,0,0.01))); /* Chrome,Safari4+ */
+            background: -webkit-linear-gradient(top, rgba(0,0,0,0.05) 0%,rgba(0,0,0,0.01) 100%); /* Chrome10+,Safari5.1+ */
+            background: -o-linear-gradient(top, rgba(0,0,0,0.05) 0%,rgba(0,0,0,0.01) 100%); /* Opera 11.10+ */
+            background: -ms-linear-gradient(top, rgba(0,0,0,0.05) 0%,rgba(0,0,0,0.01) 100%); /* IE10+ */
+            background: linear-gradient(to bottom, rgba(0,0,0,0.05) 0%,rgba(0,0,0,0.01) 100%); /* W3C */
+        }
+        h1 {
+            font-size: 28px;
+            text-align: center;
+        }
+        dl {
+            max-width: 800px;
+            margin: auto;
+        }
+        dt{
+            font-size: 18px;
+            font-weight: bold;
+         }
+        dd{
+            font-size: 16px;
+        }
+        code{
+            color: #008;
+            background: #eee;
+        }
+    </style>
+    <link rel="stylesheet" href="../sheets.css">
 </head>
 <body>
+<ul class="sheets hide">
+    <!-- Показываем ссылки только на сервере. Что бы не было бага если скачают по отдельности -->
+    <li><a class="test" href="../y-andex1/airport.html">1</a></li>
+    <li><a class="test" href="../y-andex2/populations.html">2</a></li>
+    <li><a class="test" href="../y-andex3/audioplayer.html">3</a></li>
+</ul>
+<h1>Решение Задания №2</h1>
+<dl>
+    <dt>Ошибка в коде приложения, из-за которой реальный результат работы отличается от ожидаемого:</dt>
+        <dd>Все <code>callback</code>, которые передавались в функцию <code>getData(request, callback)</code>,
+            использовали одно и тоже замыкание для поиска значения <code>request</code>. </dd>
+        <dd>Внутри цикла <code>for</code> не создается локальная область видимости,
+            поэтому для всех трех <code>request</code> будет назначен один <code>callback</code>
+            (последний определенный, с <code>request</code> <code>'populations'</code>).
+            Нужно в каждую <code>getData</code> передать собственный <code>callback</code>.</dd>
+        <dd>Т.к. у <code>responses</code> теперь только одно свойство <code>'/populations'</code>,
+            то <code>l.length</code> всегда будет равно 1
+            и блок внутри <code>if</code> никогда не будет выполнен.
+        </dd>
+    <dt>О том как эта ошибка могла возникнуть:</dt>
+        <dd>Функция <code>callback()</code> использует значение переменной <code>request</code>,
+            которое определяется с использованием переменной цикла. Когда функция <code>callback</code> выполняется впервые,
+            внешний цикл уже закончился, поэтому значение <code>request</code>
+            не меняется. Поэтому все, что происходит далее не имеет смысла.</dd>
+    <dt>Как её избежать в будущем:</dt>
+        <dd>Нужно связывать итерации цикла с соответствующими значениями <code>request</code>, чтобы
+            каждый раз функция <code>callback()</code> работала с верным значением <code>request</code>.
+        </dd>
+        <dd>На мой взгляд правильнее будет использовать метод <code>forEach()</code>, чтобы
+            итерироваться по массиву <code>requests</code>.
+        </dd>
+</dl>
 <script src="populations.js"></script>
 </body>
 </html>
